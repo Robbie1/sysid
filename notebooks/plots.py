@@ -22,11 +22,12 @@ def plot_rediction(Time, u, y, yid, outputs, inputs, method, inc_output=False):
             plt.title('input_'+ str(idx-len(outputs)+1))
     plt.show()
 
-def plot_comparison(step_test_data, inputs, outputs, start_time, end_time, plt_input=False):
+def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time, plt_input=False):
     """
     Plot the predicted and true output-signals.
     
     :param step_test_data: dataframe bject of loaded data.
+    :param model: npz model file.
     :param inputs: Input vectors of the model.
     :param outputs: Output vectors of the model.
     :param start_time: Starting time of prediction data.
@@ -43,7 +44,7 @@ def plot_comparison(step_test_data, inputs, outputs, start_time, end_time, plt_i
 
 
     # Use the model to predict the output-signals.
-    mdl = np.load('model.npz')
+    mdl = np.load(model)
     
     # The output of the model
     xid, yid = fsetSIM.SS_lsim_process_form(mdl['A'], mdl['B'], mdl['C'], mdl['D'], u, mdl['X0'])
