@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 from sippy import functionsetSIM as fsetSIM
 import numpy as np
 
-def plot_rediction(Time, u, y, yid, outputs, inputs, method, inc_output=False):
+def plot_rediction(Time, u, y, yid, outputs, inputs, method, inc_output=False, ):
     for idx in range(0,len(outputs)):
         plt.figure(idx)
         plt.plot(Time, y[idx])
@@ -22,7 +22,7 @@ def plot_rediction(Time, u, y, yid, outputs, inputs, method, inc_output=False):
             plt.title('input_'+ str(idx-len(outputs)+1))
     plt.show()
 
-def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time, plt_input=False):
+def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time, plt_input=False, scale_plt=False):
     """
     Plot the predicted and true output-signals.
     
@@ -33,6 +33,7 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
     :param start_time: Starting time of prediction data.
     :param end_time: Ending time of prediction data.
     :param plt_output: Boolean whether to Input vectors.
+    :param scale_plt: Boolean whether to scale ouput vector plots.
     """
     
     val_data = step_test_data.loc[start_time:end_time]
@@ -47,7 +48,7 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
     mdl = np.load(model)
     
     # The output of the model
-    xid, yid = fsetSIM.SS_lsim_process_form(mdl['A'], mdl['B'], mdl['C'], mdl['D'], u, mdl['X0'])
+    xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=mdl['X0'])
     
     # Make the plotting-canvas bigger.
     plt.rcParams['figure.figsize'] = [25, 5]
@@ -58,10 +59,11 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
         plt.plot(Time, yid[idx])
         plt.ylabel(outputs[idx])
         plt.grid()
-        plt.ylim(np.amin(y[idx])*.99, np.amax(y[idx])*1.01)
         plt.xlabel("Time")
         plt.title('output_'+ str(idx+1))
         plt.legend(['measurment', 'prediction'])
+        if scale_plt==True:
+            plt.ylim(np.amin(y[idx])*.99, np.amax(y[idx])*1.01)
         
     if plt_input == True:
         for idx in range(len(outputs), len(outputs) + len(inputs)):
