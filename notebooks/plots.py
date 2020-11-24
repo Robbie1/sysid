@@ -4,26 +4,6 @@ from sippy import functionsetSIM as fsetSIM
 import numpy as np
 from  control import  ss, step_response, dcgain
 
-def plot_rediction(Time, u, y, yid, outputs, inputs, method, inc_output=False, ):
-    for idx in range(0,len(outputs)):
-        plt.figure(idx)
-        plt.plot(Time, y[idx])
-        plt.plot(Time, yid[idx])
-        plt.ylabel(outputs[idx])
-        plt.grid()
-        plt.xlabel("Time")
-        plt.title('output_'+ str(idx+1))
-        plt.legend(['measurment', 'prediction, ' + method])
-    if inc_output == True:
-        for idx in range(len(outputs), len(outputs) + len(inputs)):
-            plt.figure(idx)
-            plt.plot(Time, u[idx-len(outputs)])
-            plt.ylabel(inputs[idx-len(outputs)])
-            plt.grid()
-            plt.xlabel("Time")
-            plt.title('input_'+ str(idx-len(outputs)+1))
-    plt.show()
-
 def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time, plt_input=False, scale_plt=False):
     """
     Plot the predicted and true output-signals.
@@ -56,17 +36,17 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
     plt.rcParams['figure.figsize'] = [25, 5]
     # For each output-signal.
     for idx in range(0,len(outputs)):
-
         plt.figure(idx)
-        plt.plot(Time, y[idx])
-        plt.plot(Time, yid[idx])
+        plt.xticks(rotation=15)
+        plt.plot(Time, y[idx],color='r')
+        plt.plot(Time, yid[idx],color='b')
         plt.ylabel(outputs[idx])
         plt.grid()
         plt.xlabel("Time")
         plt.title('output_'+ str(idx+1))
         plt.legend(['measurment', 'prediction'])
         ax=plt.gca()
-        xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
+        xfmt = md.DateFormatter('%m-%d-%yy %H:%M')
         ax.xaxis.set_major_formatter(xfmt)        
         if scale_plt==True:
             plt.ylim(np.amin(y[idx])*.99, np.amax(y[idx])*1.01)
@@ -74,16 +54,25 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
     if plt_input == True:
         for idx in range(len(outputs), len(outputs) + len(inputs)):
             plt.figure(idx)
-            plt.plot(Time, u[idx-len(outputs)])
+            plt.xticks(rotation=15)
+            plt.plot(Time, u[idx-len(outputs)], color='r')
             plt.ylabel(inputs[idx-len(outputs)])
             plt.grid()
             plt.xlabel("Time")
             plt.title('input_'+ str(idx-len(outputs)+1))
+            ax=plt.gca()
+            xfmt = md.DateFormatter('%m-%d-%yy %H:%M')
+            ax.xaxis.set_major_formatter(xfmt) 
     plt.show()
 
 def plot_model(model, inputs, outputs, tss=90):
     """
+    Plot the model matrix.
 
+    :param model: npz model file.
+    :param inputs: Input vectors of the model.
+    :param outputs: Output vectors of the model
+    :Param tss: time to steady state (length of x axis of subplot).
     """
     mdl = np.load(model)
     sys = ss(mdl['A'], mdl['B'], mdl['C'], mdl['D'],1)
