@@ -1,6 +1,8 @@
 from matplotlib import pyplot as plt
+import matplotlib.dates as md
 from sippy import functionsetSIM as fsetSIM
 import numpy as np
+from  control import  ss, step_response, dcgain
 
 def plot_rediction(Time, u, y, yid, outputs, inputs, method, inc_output=False, ):
     for idx in range(0,len(outputs)):
@@ -54,6 +56,7 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
     plt.rcParams['figure.figsize'] = [25, 5]
     # For each output-signal.
     for idx in range(0,len(outputs)):
+
         plt.figure(idx)
         plt.plot(Time, y[idx])
         plt.plot(Time, yid[idx])
@@ -62,6 +65,9 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
         plt.xlabel("Time")
         plt.title('output_'+ str(idx+1))
         plt.legend(['measurment', 'prediction'])
+        ax=plt.gca()
+        xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
+        ax.xaxis.set_major_formatter(xfmt)        
         if scale_plt==True:
             plt.ylim(np.amin(y[idx])*.99, np.amax(y[idx])*1.01)
         
@@ -73,4 +79,33 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
             plt.grid()
             plt.xlabel("Time")
             plt.title('input_'+ str(idx-len(outputs)+1))
+    plt.show()
+
+def plot_model(model, inputs, outputs, tss=90):
+    """
+
+    """
+    mdl = np.load(model)
+    sys = ss(mdl['A'], mdl['B'], mdl['C'], mdl['D'],1)
+    gain_matrix = dcgain(sys).T
+    num_i = len(inputs)
+    num_o = len(outputs)
+    fig, axs = plt.subplots(num_i,num_o, figsize=(3*len(outputs), 2*len(inputs)), facecolor='w', edgecolor='k')
+    fig.suptitle('Step responce: '+model)
+    T = np.arange(tss)
+    for idx_i in range(num_i):
+        for idx_o in range(num_o):
+            ax = axs[idx_i][idx_o]
+            t,y_step = step_response(sys,T, input=idx_i, output=idx_o)
+            gain = round(gain_matrix[idx_i][idx_o],4)
+            ax.plot(t, y_step,color='r')
+            if idx_i == 0:
+                ax.set_title(outputs[idx_o], rotation='horizontal', ha='center', fontsize=10)
+            if idx_o == 0:
+                ax.set_ylabel(inputs[idx_i], rotation=90, fontsize=10)
+            ax.grid(color='k', linestyle='--', linewidth=0.5)
+            ax.tick_params(axis='x', colors='red',size=0,labelsize=4)
+            ax.tick_params(axis='y', colors='red',size=0,labelsize=4)
+            ax.annotate(str(gain),xy=(.72,.8),xycoords='axes fraction')
+    # fig.tight_layout()
     plt.show()
