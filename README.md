@@ -72,7 +72,7 @@ conda activate control
 ```cmd
 jupyter lab
 ```
-This should open Jupyter Lab in your browser then open notebook folder and try test the files *model_id_democol.ipynb* and *model_id_uptream_june_dataset_HP_section.ipynb*
+This should open Jupyter Lab in your browser then open notebook folder and try play the files *model_id_democol.ipynb* and *model_id_uptream_june_dataset_HP_section.ipynb*
 
 ## Documents and reference
 SIPPY [document](https://github.com/CPCLAB-UNIPI/SIPPY/blob/master/user_guide.pdf) assumes that you have a good understanding about system identification. When I started with this library I struggled a little and [Aspentech whitepaper](https://github.com/jamestjsp/sysid/blob/main/docs/HOW%20TO%20USE%20SUBSPACE%20ID%20-%20AspenTech%20White%20Paper.pdf) helped me to pickup this useful library. 
