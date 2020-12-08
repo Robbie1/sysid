@@ -24,13 +24,16 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
     Time = val_data.index
     u = val_data[inputs].to_numpy().T
     y = val_data[outputs].to_numpy().T
-
+    X0 = [[item[:10].mean()] for item in u]
+    X0.extend([[item[:10].mean()] for item in y])
+    X0 = np.array(X0)
 
     # Use the model to predict the output-signals.
     mdl = np.load(model)
     
     # The output of the model
-    xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=mdl['X0'])
+    # xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=X0])
+    xid, yid = fsetSIM.SS_lsim_process_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], u=u, x0=mdl['X0'])
     
     # Make the plotting-canvas bigger.
     plt.rcParams['figure.figsize'] = [25, 5]

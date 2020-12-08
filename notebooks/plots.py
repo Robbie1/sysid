@@ -31,6 +31,7 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
     
     # The output of the model
     xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=mdl['X0'])
+#     xid, yid = fsetSIM.SS_lsim_process_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], u=u, x0=mdl['X0'])
     
     # Make the plotting-canvas bigger.
     plt.rcParams['figure.figsize'] = [25, 5]
