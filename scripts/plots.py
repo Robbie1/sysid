@@ -2,6 +2,7 @@ from matplotlib import pyplot as plt
 import matplotlib.dates as md
 from sippy import functionsetSIM as fsetSIM
 import numpy as np
+from scipy import signal
 from  control import  ss, step_response, dcgain
 
 def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time, plt_input=False, scale_plt=False):
@@ -19,21 +20,20 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
     """
     
     val_data = step_test_data.loc[start_time:end_time]
-    val_data.columns = [col[0] for col in val_data.columns]
     
     Time = val_data.index
     u = val_data[inputs].to_numpy().T
     y = val_data[outputs].to_numpy().T
-    X0 = [[item[:10].mean()] for item in u]
-    X0.extend([[item[:10].mean()] for item in y])
-    X0 = np.array(X0)
+    # y_init = np.array([[item[:10].mean()] for item in y])
+    
 
     # Use the model to predict the output-signals.
     mdl = np.load(model)
-    
+    X0 = mdl['X0']
+    # X0[-len(y_init):] = y_init
     # The output of the model
-    # xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=X0])
-    xid, yid = fsetSIM.SS_lsim_process_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], u=u, x0=mdl['X0'])
+    xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=X0)
+    # xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=mdl['X0'])
     
     # Make the plotting-canvas bigger.
     plt.rcParams['figure.figsize'] = [25, 5]
@@ -79,17 +79,20 @@ def plot_model(model, inputs, outputs, tss=90):
     """
     mdl = np.load(model)
     sys = ss(mdl['A'], mdl['B'], mdl['C'], mdl['D'],1)
-    gain_matrix = dcgain(sys).T
+    # gain_matrix = dcgain(sys).T
     num_i = len(inputs)
     num_o = len(outputs)
     fig, axs = plt.subplots(num_i,num_o, figsize=(3*len(outputs), 2*len(inputs)), facecolor='w', edgecolor='k')
-    fig.suptitle('Step responce: '+model)
+    fig.suptitle('step_response: '+model.rsplit('.',1)[0])
     T = np.arange(tss)
     for idx_i in range(num_i):
         for idx_o in range(num_o):
-            ax = axs[idx_i][idx_o]
-            t,y_step = step_response(sys,T, input=idx_i, output=idx_o)
-            gain = round(gain_matrix[idx_i][idx_o],4)
+            if len(range(num_o)) < 2:
+                ax = axs[idx_i]
+            else:
+                ax = axs[idx_i][idx_o]
+            t, y_step = step_response(sys,T, input=idx_i, output=idx_o)
+            gain = round(y_step[-1],4)
             ax.plot(t, y_step,color='r')
             if idx_i == 0:
                 ax.set_title(outputs[idx_o], rotation='horizontal', ha='center', fontsize=10)
@@ -100,4 +103,16 @@ def plot_model(model, inputs, outputs, tss=90):
             ax.tick_params(axis='y', colors='red',size=0,labelsize=4)
             ax.annotate(str(gain),xy=(.72,.8),xycoords='axes fraction')
     # fig.tight_layout()
+    plt.show()
+def plot_freuency_response(b):
+    """
+    This function plots the frequency response of FIR array.
+    :param b: finite impulse response array.
+    """
+    w,h =signal.freqz(b)
+    plt.plot(w,np.abs(h),'g')
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel('Amplitude (db)',color='b')
+    plt.xlabel('Freuency (rad/sample)')
     plt.show()
