@@ -5,7 +5,7 @@ import plots
 from scipy.signal import detrend
 
 #load spteptest data from a TSV file
-file = r'data\upstream_june_extracted.txt'
+file = r'..\data\upstream_june_extracted.txt'
 step_test_data = pd.read_table(file,header=[0, 1,2],index_col=[0], parse_dates=[0])
 
 #slice data for model identification case
@@ -64,5 +64,5 @@ np.savez(model, A=sys_id.A, B=sys_id.B, C=sys_id.C, D=sys_id.D, K=sys_id.K, X0=s
 #Predict outputs uding identified model
 start_time = '2016-06-21 04:00:00'
 end_time = '2016-07-10 03:59:00'
-# plots.plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time, plt_input=False, scale_plt=True)
-plots.plot_model(model, inputs, outputs)
+plots.plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time, plt_input=False, scale_plt=True)
+# plots.plot_model(model, inputs, outputs)
