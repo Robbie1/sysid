@@ -36,8 +36,7 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
     xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=X0)
     # xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=mdl['X0'])
     pad_len = n * 10
-    pad_arr = yid[:,pad_len+1].reshape((yid.shape[0],1))
-    yid[:,:pad_len] = pad_arr
+    yid[:,:pad_len] = yid[:,pad_len+1].reshape((yid.shape[0],1))
     mean_val = y[:,:pad_len].mean(axis=1)
     yid[:,:] = yid+(mean_val-yid[:,0]).reshape(yid.shape[0],1)
     # Make the plotting-canvas bigger.
