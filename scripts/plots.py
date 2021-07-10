@@ -5,7 +5,7 @@ import numpy as np
 from scipy import signal
 from  control import  ss, step_response, dcgain
 
-def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time, plt_input=False, scale_plt=False):
+def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time, plt_input=False):
     """
     Plot the predicted and true output-signals.
     
@@ -30,13 +30,17 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
     # Use the model to predict the output-signals.
     mdl = np.load(model)
     X0 = mdl['X0']
+    n = len(mdl['A'])
     # X0[-len(y_init):] = y_init
     # The output of the model
     xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=X0)
     # xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=mdl['X0'])
-    
+    pad_len = 3
+    pad_arr = yid[:,n*pad_len+1].reshape((yid.shape[0],1))
+    yid[:,:n*pad_len] = pad_arr
+    yid[:,:] = yid+(y[:,0]-yid[:,0]).reshape((yid.shape[0],1))
     # Make the plotting-canvas bigger.
-    plt.rcParams['figure.figsize'] = [25, 5]
+    plt.rcParams['figure.figsize'] = [12, 4]
     # For each output-signal.
     for idx in range(0,len(outputs)):
         plt.figure(idx)
@@ -51,8 +55,6 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
         ax=plt.gca()
         xfmt = md.DateFormatter('%m-%d-%yy %H:%M')
         ax.xaxis.set_major_formatter(xfmt)        
-        if scale_plt==True:
-            plt.ylim(np.amin(y[idx])*.99, np.amax(y[idx])*1.01)
         
     if plt_input == True:
         for idx in range(len(outputs), len(outputs) + len(inputs)):
