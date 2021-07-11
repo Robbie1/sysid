@@ -9,7 +9,6 @@ import plots
 #load spteptest data from a TSV file
 file = r'data\PC_Data_shifted.csv'
 step_test_data = pd.read_csv(file,index_col='Time', parse_dates=True, skiprows=[1,2])
-ts = pd.Timedelta(step_test_data.index[1] - step_test_data.index[0]).total_seconds() # data sampling time
 #slice data for model identification case
 start = '09/30/2012 09:00:00'
 stop = '09/30/2012 12:20:10'
@@ -17,37 +16,32 @@ idinput = step_test_data.loc[start:stop].copy()
 
 #select Inputs and Outputs for the model identification case
 inputs = ['Fuel','Fan', 'Feed']
-outputs = ['Temp','O2']
+outputs = ['Temp', 'O2']
 
-# prepare detrending filter 
-tss = 5 * 60
+# Create FIR filter to detrend signal 
+
+ts = pd.Timedelta(step_test_data.index[1] - step_test_data.index[0]).total_seconds() # data sampling time
+tss = 3
+tss_sec = tss * 60
 mult_factor = 3
-filt_tss = tss * mult_factor
-numtaps = 32+1
-cutoff = 2/filt_tss/mult_factor
-fs = ts
+filt_tss = tss_sec * mult_factor
+cutoff = 1/2/filt_tss
 pass_zero= 'lowpass'
-window = ('exponential', None, 3)
-coef = signal.firwin(numtaps=numtaps, cutoff=cutoff, window=window, pass_zero=pass_zero, fs=fs)
-plots.plot_freuency_response(coef)
+nyq_rate = ts/2.0
+width = 0.5/nyq_rate
+ripple_db =65
+N,beta =signal.kaiserord(ripple_db,width)
+window = ('kaiser',beta)
+coef = signal.firwin(numtaps=N, cutoff=cutoff, window=window, pass_zero=pass_zero, nyq = nyq_rate)
+# plots.plot_freuency_response(coef)
 trend = signal.filtfilt(coef, 1.0,idinput, axis=0)
 idinput = idinput - trend
-# for column in idinput:
-#     t = np.arange(len(idinput))
-#     orginal_sig = idinput[column].copy()
-#     trend = signal.filtfilt(coef, 1.0,idinput[column])
-#     idinput[column] = idinput[column] - trend
-#     plt.plot(t, orginal_sig, t, trend, t, idinput[column])
-#     plt.legend(['orginal signal', 'trend', 'detrended signal'])
-#     plt.show()
 
-# idinput.plot(subplots=True)
-# plt.show()
 u = idinput[inputs].to_numpy().T
 y = idinput[outputs].to_numpy().T
 print('Output shape:', y.shape)
 print('Input shape:',u.shape)
-
+ 
 #specify model identification parameters, reffer the documentation for detais.
 model = 'Precalciner.npz' #model file name
 method='CVA'
@@ -76,8 +70,9 @@ sys_id = system_identification(
 
 #save model parameters A, B, C,D and X0 as npz file
 np.savez(model, A=sys_id.A, B=sys_id.B, C=sys_id.C, D=sys_id.D, K=sys_id.K, X0=sys_id.x0)
-plots.plot_model(model, inputs, outputs, tss=tss)
+plots.plot_model(model, inputs, outputs, tss_sec, ts)
 
 start_time = start
 end_time = stop
-plots.plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time, plt_input=False)
+pad_len = 30 #int(tss_sec/ts*0.8)
+plots.plot_comparison(step_test_data, model, pad_len, inputs, outputs, start_time, end_time, plt_input=False)
