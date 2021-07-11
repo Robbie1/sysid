@@ -5,12 +5,13 @@ import numpy as np
 from scipy import signal
 from  control import  ss, step_response, dcgain
 
-def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time, plt_input=False):
+def plot_comparison(step_test_data, model, pad_len, inputs, outputs, start_time, end_time, plt_input=False):
     """
     Plot the predicted and true output-signals.
     
     :param step_test_data: dataframe bject of loaded data.
     :param model: npz model file.
+    :param pad_len: data pading legth to remove simulation artifacts.
     :param inputs: Input vectors of the model.
     :param outputs: Output vectors of the model.
     :param start_time: Starting time of prediction data.
@@ -33,12 +34,13 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
     n = len(mdl['A'])
     # X0[-len(y_init):] = y_init
     # The output of the model
-    xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=X0)
-    # xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=mdl['X0'])
-    pad_len = n * 10
+    # xid, yid = fsetSIM.SS_lsim_innovation_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'], K=mdl['K'], y=y, u=u, x0=X0)
+    xid, yid = fsetSIM.SS_lsim_process_form(A=mdl['A'], B=mdl['B'], C=mdl['C'], D=mdl['D'],u=u, x0=mdl['X0'])
+    
     yid[:,:pad_len] = yid[:,pad_len+1].reshape((yid.shape[0],1))
-    mean_val = y[:,:pad_len].mean(axis=1)
-    yid[:,:] = yid+(mean_val-yid[:,0]).reshape(yid.shape[0],1)
+    y_mean_val = y[:,:].mean(axis=1)
+    yid_mean_val = yid[:,:].mean(axis=1)
+    yid[:,:] = yid+(y_mean_val-yid_mean_val).reshape(yid.shape[0],1)
     # Make the plotting-canvas bigger.
     plt.rcParams['figure.figsize'] = [12, 4]
     # For each output-signal.
@@ -70,7 +72,7 @@ def plot_comparison(step_test_data, model, inputs, outputs, start_time, end_time
             ax.xaxis.set_major_formatter(xfmt) 
     plt.show()
 
-def plot_model(model, inputs, outputs, tss=90):
+def plot_model(model, inputs, outputs, tss=90, dt=1):
     """
     Plot the model matrix.
 
@@ -80,13 +82,13 @@ def plot_model(model, inputs, outputs, tss=90):
     :Param tss: time to steady state (length of x axis of subplot).
     """
     mdl = np.load(model)
-    sys = ss(mdl['A'], mdl['B'], mdl['C'], mdl['D'],1)
+    sys = ss(mdl['A'], mdl['B'], mdl['C'], mdl['D'],dt)
     # gain_matrix = dcgain(sys).T
     num_i = len(inputs)
     num_o = len(outputs)
     fig, axs = plt.subplots(num_i,num_o, figsize=(3*len(outputs), 2*len(inputs)), facecolor='w', edgecolor='k')
     fig.suptitle('step_response: '+model.rsplit('.',1)[0])
-    T = np.arange(tss)
+    T = np.arange(0,tss, step=dt)
     for idx_i in range(num_i):
         for idx_o in range(num_o):
             if len(range(num_o)) < 2:
